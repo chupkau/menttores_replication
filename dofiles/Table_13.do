@@ -2,20 +2,14 @@
 
 
 
-use "${DATA_CLEAN}tutoring_regression_dataset.dta", clear 
+use "${DATA_CLEAN}replication_dataset.dta", clear 
 
 set varabbrev off
 eststo clear
 set scheme cleanplots
 
-cap log close 
-log using "${TEMP}\main_results_nonDID.log", replace
-
-
 * Specs
 local spec2 "i.grade i.age_student i.comunidad_1 i.gender i.fsm i.math_grade i.lockdown_class i.device_available  i.refuerzo_2  i.block_id  i.language_home i.education i.income i.hh_persons_b18 i.couple i.countr_origin_parent_9"
-
-
 local spec0 "i.block_id"
 
 
@@ -40,18 +34,6 @@ foreach var in final_marks final_marks_fu  pass_math  failed_course failed_cours
 	gen treat_v2 = treat
 	label define treat_v2 0 "Control" 1 "Treat"
 	label values treat_v2 treat_v2
-
-* Continuous treatment
-	gen hours_tutoring = minutes/60 // put in hours
-	gen treat_con = treat*hours_tutoring
-	replace treat_con = 0 if treat == 0
-
-	gen treat_con_v2 = treat_con
-	lab var treat_con_v2 "Treat x Nb. hours"
-	label define treat_con_v2 0 "Control" 1 "Treat x Nb. hours"
-	label values treat_con_v2 treat_con_v2
-	lab var treat_con "Treat"
-	
 
 * Start loop
 
@@ -122,13 +104,6 @@ replace cells(b(fmt(3) star) se(fmt(3)  par)) stats(meany sdy r2 Obs , fmt(2 2 2
 
 
 set varabbrev on
-
-
-
-
-foreach var in test_score_percent good_math good_language wellbeing_index loc_index {
-    pwcorr `var' `var'_base if period==1, sig
-} 
 
 
 * testing for equaliy of coefficients 
@@ -213,11 +188,6 @@ suest m1 m2, vce(cluster ID)
 lincom _b[m1_mean:1.treat] - _b[m2_mean:1.treat#1.post]
 
 
-
-
-
-cap log close 
-ex
 
 
 
